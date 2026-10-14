@@ -13,6 +13,8 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- PapaParse CSV Parser -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 
   <style>
     :root {
@@ -503,6 +505,170 @@
     footer a:hover {
       text-decoration: underline;
     }
+
+    /* Custom Dataset URL Card */
+    .dataset-url-card {
+      background: rgba(17, 24, 39, 0.78);
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      border-radius: 1rem;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 4px 24px -4px rgba(16, 185, 129, 0.15);
+    }
+    .dataset-url-card-title {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 1rem;
+      font-weight: 700;
+      color: #6ee7b7;
+      margin-bottom: 0.5rem;
+    }
+    .dataset-url-card-desc {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+      line-height: 1.55;
+    }
+    .url-input-row {
+      display: flex;
+      gap: 0.7rem;
+      flex-wrap: wrap;
+    }
+    .url-text-input {
+      flex: 1;
+      min-width: 260px;
+      background: #0d1424;
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      border-radius: 0.6rem;
+      padding: 0.65rem 1rem;
+      color: #e2e8f0;
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color 0.2s;
+      font-family: 'Consolas', monospace;
+    }
+    .url-text-input:focus {
+      border-color: #10b981;
+      box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+    }
+    .btn-load-csv {
+      background: linear-gradient(135deg, #059669, #0284c7);
+      color: #fff;
+      border: none;
+      border-radius: 0.6rem;
+      padding: 0.65rem 1.4rem;
+      font-weight: 700;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.15s;
+      white-space: nowrap;
+    }
+    .btn-load-csv:hover { opacity: 0.88; transform: translateY(-1px); }
+    .btn-load-csv:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+    .url-preset-chips {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-top: 0.7rem;
+    }
+    .url-chip {
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: #6ee7b7;
+      padding: 0.28rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.78rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .url-chip:hover { background: rgba(16, 185, 129, 0.22); }
+    .csv-analysis-result {
+      margin-top: 1.2rem;
+      display: none;
+      animation: fadeIn 0.4s ease;
+    }
+    .csv-analysis-result.visible { display: block; }
+    .csv-result-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+    .csv-stat-box {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border-color);
+      border-radius: 0.6rem;
+      padding: 0.75rem 1rem;
+    }
+    .csv-stat-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.25rem;
+    }
+    .csv-stat-value {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #6ee7b7;
+    }
+    .csv-table-wrap {
+      overflow-x: auto;
+      border-radius: 0.5rem;
+      border: 1px solid var(--border-color);
+      margin-top: 0.8rem;
+    }
+    .csv-table-wrap table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+    }
+    .csv-table-wrap th {
+      background: rgba(16,185,129,0.1);
+      color: #6ee7b7;
+      padding: 0.55rem 0.75rem;
+      font-weight: 600;
+      text-align: left;
+      white-space: nowrap;
+    }
+    .csv-table-wrap td {
+      padding: 0.45rem 0.75rem;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+    .csv-table-wrap tr:last-child td { border-bottom: none; }
+    .csv-error-box {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.35);
+      border-radius: 0.6rem;
+      padding: 0.8rem 1rem;
+      color: #fca5a5;
+      font-size: 0.88rem;
+      margin-top: 0.8rem;
+      display: none;
+    }
+    .csv-error-box.visible { display: block; }
+    .coeff-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+    .coeff-item {
+      background: rgba(16,185,129,0.08);
+      border: 1px solid rgba(16,185,129,0.2);
+      border-radius: 0.4rem;
+      padding: 0.35rem 0.7rem;
+      font-size: 0.8rem;
+      color: #a7f3d0;
+    }
+    .coeff-item strong { color: #6ee7b7; }
   </style>
 </head>
 <body>
@@ -523,6 +689,41 @@
           <i data-lucide="arrow-left-right" style="width: 14px; height: 14px;"></i>
           返回 50 Startups
         </a>
+      </div>
+    </div>
+
+    <!-- Custom Dataset URL Input Card -->
+    <div class="dataset-url-card" id="custom-dataset-section">
+      <div class="dataset-url-card-title">
+        <i data-lucide="link" style="width:18px;height:18px;"></i>
+        🔗 自訂 Dataset URL 載入分析 (加分功能)
+      </div>
+      <p class="dataset-url-card-desc">
+        貼上任意 CSV 格式 Dataset 的原始網址（如 GitHub Raw URL），系統將自動讀取並在瀏覽器端執行 CRISP-DM 多元線性回歸（OLS）分析，計算 R²、RMSE 與各特徵係數！
+      </p>
+      <div class="url-input-row">
+        <input type="url" id="csv-url-input" class="url-text-input"
+          placeholder="https://raw.githubusercontent.com/.../boston_housing.csv"
+          value="https://raw.githubusercontent.com/selva86/datasets/master/BostonHousing.csv"
+        >
+        <button class="btn-load-csv" id="btn-load-csv" onclick="loadCustomCSV()">⚡ 載入 &amp; 分析</button>
+      </div>
+      <div class="url-preset-chips">
+        <span style="font-size:0.78rem;color:var(--text-dim);align-self:center;">快速套用：</span>
+        <span class="url-chip" onclick="setUrlPreset('https://raw.githubusercontent.com/selva86/datasets/master/BostonHousing.csv')">🏠 Boston Housing (GitHub)</span>
+        <span class="url-chip" onclick="setUrlPreset('https://raw.githubusercontent.com/Avik-Jain/100-Days-Of-ML-Code/master/datasets/50_Startups.csv')">📊 50 Startups</span>
+        <span class="url-chip" onclick="setUrlPreset('https://raw.githubusercontent.com/dsrscientist/dataset1/master/winequality-red.csv')">🍷 Wine Quality</span>
+      </div>
+      <!-- Error Box -->
+      <div class="csv-error-box" id="csv-error-box"></div>
+      <!-- Analysis Result -->
+      <div class="csv-analysis-result" id="csv-analysis-result">
+        <div style="font-size:0.9rem;font-weight:700;color:#6ee7b7;margin-bottom:0.6rem;">📈 分析結果 (OLS 多元線性回歸)</div>
+        <div class="csv-result-grid" id="csv-stats-grid"></div>
+        <div style="font-size:0.82rem;font-weight:600;color:var(--text-muted);margin-bottom:0.35rem;">📐 特徵係數 (Coefficients)：</div>
+        <ul class="coeff-list" id="coeff-list"></ul>
+        <div style="font-size:0.82rem;font-weight:600;color:var(--text-muted);margin:0.8rem 0 0.35rem;">📋 資料預覽 (前 5 筆)：</div>
+        <div class="csv-table-wrap" id="csv-preview-table"></div>
       </div>
     </div>
 
@@ -1091,6 +1292,168 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_
         }
       });
     });
+  </script>
+
+  <script>
+  // ============================================================
+  // Custom Dataset URL Loader & In-Browser OLS Regression Engine
+  // ============================================================
+
+  function setUrlPreset(url) {
+    document.getElementById('csv-url-input').value = url;
+  }
+
+  async function loadCustomCSV() {
+    const urlInput = document.getElementById('csv-url-input');
+    const btn = document.getElementById('btn-load-csv');
+    const errorBox = document.getElementById('csv-error-box');
+    const resultSection = document.getElementById('csv-analysis-result');
+    const url = urlInput.value.trim();
+
+    if (!url) { showCsvError('請輸入 CSV 網址！'); return; }
+    errorBox.classList.remove('visible');
+    resultSection.classList.remove('visible');
+    btn.disabled = true;
+    btn.textContent = '⏳ 載入中...';
+
+    const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(url);
+    let csvText = null;
+
+    try {
+      const res = await fetch(url, { mode: 'cors' });
+      if (res.ok) csvText = await res.text();
+    } catch(e) {}
+
+    if (!csvText) {
+      try {
+        const res = await fetch(proxyUrl);
+        if (res.ok) csvText = await res.text();
+      } catch(e) {}
+    }
+
+    btn.disabled = false;
+    btn.textContent = '⚡ 載入 & 分析';
+
+    if (!csvText) {
+      showCsvError('❌ 無法載入 CSV。請確認 URL 正確且可公開存取（支援 GitHub Raw URL）。');
+      return;
+    }
+
+    analyzeCSV(csvText);
+  }
+
+  function showCsvError(msg) {
+    const box = document.getElementById('csv-error-box');
+    box.textContent = msg;
+    box.classList.add('visible');
+  }
+
+  function analyzeCSV(csvText) {
+    const errorBox = document.getElementById('csv-error-box');
+    const resultSection = document.getElementById('csv-analysis-result');
+
+    const parsed = Papa.parse(csvText.trim(), { header: true, dynamicTyping: true, skipEmptyLines: true });
+    if (parsed.errors.length > 0 && parsed.data.length === 0) {
+      showCsvError('❌ CSV 解析失敗：' + parsed.errors[0].message);
+      return;
+    }
+
+    const rows = parsed.data;
+    const headers = parsed.meta.fields;
+    const n = rows.length;
+    if (n < 5) { showCsvError('❌ 資料筆數不足（需至少 5 筆）。'); return; }
+
+    const numericCols = headers.filter(h => rows.slice(0, 10).every(r => typeof r[h] === 'number' && !isNaN(r[h])));
+    if (numericCols.length < 2) { showCsvError('❌ 需至少 2 個數值欄位才能執行回歸分析。'); return; }
+
+    const targetCol = numericCols[numericCols.length - 1];
+    const featureCols = numericCols.slice(0, -1);
+
+    const validRows = rows.filter(r => featureCols.every(c => typeof r[c] === 'number' && !isNaN(r[c])) && typeof r[targetCol] === 'number' && !isNaN(r[targetCol]));
+    const m = validRows.length;
+    if (m < featureCols.length + 2) { showCsvError('❌ 有效資料筆數不足。'); return; }
+
+    const X = validRows.map(r => [1, ...featureCols.map(c => r[c])]);
+    const Y = validRows.map(r => r[targetCol]);
+
+    let beta;
+    try { beta = olsSolve(X, Y); } catch(e) { showCsvError('❌ 矩陣計算失敗（可能存在共線性）：' + e.message); return; }
+
+    const yHat = X.map(row => row.reduce((s, v, i) => s + v * beta[i], 0));
+    const yMean = Y.reduce((s, v) => s + v, 0) / m;
+    const ssTot = Y.reduce((s, v) => s + (v - yMean) ** 2, 0);
+    const ssRes = Y.reduce((s, v, i) => s + (v - yHat[i]) ** 2, 0);
+    const r2 = 1 - ssRes / ssTot;
+    const rmse = Math.sqrt(ssRes / m);
+    const mae = Y.reduce((s, v, i) => s + Math.abs(v - yHat[i]), 0) / m;
+
+    const statsGrid = document.getElementById('csv-stats-grid');
+    statsGrid.innerHTML = [
+      { label: '目標欄位 (Target)', value: targetCol },
+      { label: '特徵數 (Features)', value: featureCols.length },
+      { label: '有效資料筆數', value: m },
+      { label: 'R² 決定係數', value: r2.toFixed(4) },
+      { label: 'RMSE', value: rmse.toFixed(4) },
+      { label: 'MAE', value: mae.toFixed(4) }
+    ].map(s => `<div class="csv-stat-box"><div class="csv-stat-label">${s.label}</div><div class="csv-stat-value">${s.value}</div></div>`).join('');
+
+    const coeffList = document.getElementById('coeff-list');
+    const coeffNames = ['截距 (Intercept)', ...featureCols];
+    coeffList.innerHTML = beta.map((b, i) => `<li class="coeff-item"><strong>${coeffNames[i]}:</strong> ${b.toFixed(4)}</li>`).join('');
+
+    const previewWrap = document.getElementById('csv-preview-table');
+    const previewRows = validRows.slice(0, 5);
+    previewWrap.innerHTML = '<table><thead><tr>' +
+      headers.map(h => `<th>${h}</th>`).join('') +
+      '</tr></thead><tbody>' +
+      previewRows.map(r => '<tr>' + headers.map(h => `<td>${r[h] !== undefined ? r[h] : ''}</td>`).join('') + '</tr>').join('') +
+      '</tbody></table>';
+
+    resultSection.classList.add('visible');
+    resultSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  function matMul(A, B) {
+    const m = A.length, n = B[0].length, p = B.length;
+    return Array.from({length: m}, (_, i) =>
+      Array.from({length: n}, (_, j) =>
+        A[i].reduce((s, v, k) => s + v * B[k][j], 0)));
+  }
+
+  function matTranspose(A) {
+    return A[0].map((_, j) => A.map(row => row[j]));
+  }
+
+  function matInverse(A) {
+    const n = A.length;
+    const aug = A.map((row, i) => [...row, ...Array.from({length: n}, (_, j) => i === j ? 1 : 0)]);
+    for (let col = 0; col < n; col++) {
+      let maxRow = col;
+      for (let row = col + 1; row < n; row++) {
+        if (Math.abs(aug[row][col]) > Math.abs(aug[maxRow][col])) maxRow = row;
+      }
+      [aug[col], aug[maxRow]] = [aug[maxRow], aug[col]];
+      const pivot = aug[col][col];
+      if (Math.abs(pivot) < 1e-12) throw new Error('矩陣奇異（特徵可能高度共線）');
+      for (let j = 0; j < 2 * n; j++) aug[col][j] /= pivot;
+      for (let row = 0; row < n; row++) {
+        if (row !== col) {
+          const f = aug[row][col];
+          for (let j = 0; j < 2 * n; j++) aug[row][j] -= f * aug[col][j];
+        }
+      }
+    }
+    return aug.map(row => row.slice(n));
+  }
+
+  function olsSolve(X, Y) {
+    const Xt = matTranspose(X);
+    const XtX = matMul(Xt, X);
+    const XtXinv = matInverse(XtX);
+    const XtY = matMul(Xt, Y.map(y => [y]));
+    const beta = matMul(XtXinv, XtY);
+    return beta.map(b => b[0]);
+  }
   </script>
 </body>
 </html>
