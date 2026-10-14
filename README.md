@@ -17,7 +17,8 @@
 
 ## 🌐 線上展示與程式碼庫 (Demo Site & Repository)
 
-- **GitHub 專案倉庫 (Repository & Demo)**: [https://github.com/mumumush/1014](https://github.com/mumumush/1014)
+- **🚀 線上互動展示網站 (Live Web Demo)**: [https://mumumush.github.io/1014/](https://mumumush.github.io/1014/)
+- **GitHub 專案倉庫 (Repository)**: [https://github.com/mumumush/1014](https://github.com/mumumush/1014)
 - **Git Clone 指令**:
   ```bash
   git clone https://github.com/mumumush/1014.git
