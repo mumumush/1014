@@ -1,9 +1,11 @@
-# AIoT-DA L6: 50 Startups Profit Prediction using Multiple Linear Regression
+# AIoT-DA L6: Multiple Linear Regression — 50 Startups & Boston Housing
 
 [![Python Version](https://img.shields.io/badge/Python-3.13%2B-blue.svg)](https://www.python.org/)
 [![Scikit-Learn](https://img.shields.io/badge/Library-scikit--learn-orange.svg)](https://scikit-learn.org/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![GitHub Repository](https://img.shields.io/badge/GitHub-mumumush%2F1014-lightgrey?logo=github)](https://github.com/mumumush/1014)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Vercel-black?logo=vercel)](https://temporary-nimble-silicon-jkupr2j.vercel.app)
+[![GitHub Pages](https://img.shields.io/badge/GitHub%20Pages-mumumush.github.io-blue?logo=github)](https://mumumush.github.io/1014/)
 
 ---
 
@@ -15,15 +17,53 @@
 
 ---
 
-## 🌐 線上展示與程式碼庫 (Demo Site & Repository)
+## 🌐 線上展示網址 (Live Demo URLs)
 
-- **🚀 線上即時展示網站 (Vercel Live Demo)**: [https://temporary-nimble-silicon-jkupr2j.vercel.app](https://temporary-nimble-silicon-jkupr2j.vercel.app)
-- **🌐 GitHub Pages 網站**: [https://mumumush.github.io/1014/](https://mumumush.github.io/1014/)
-- **GitHub 專案倉庫 (Repository)**: [https://github.com/mumumush/1014](https://github.com/mumumush/1014)
-- **Git Clone 指令**:
-  ```bash
-  git clone https://github.com/mumumush/1014.git
-  ```
+> 🎯 **老師請直接點擊以下網址，無需安裝任何程式，瀏覽器即可互動展示！**
+
+### 📺 兩大問題互動展示頁面
+
+| 問題 | 主題 | 線上網址 |
+|:---:|:---|:---|
+| **Problem 1** | 🏢 **50 Startups 新創獲利預測** (Multiple Linear Regression) | 🔗 [https://temporary-nimble-silicon-jkupr2j.vercel.app](https://temporary-nimble-silicon-jkupr2j.vercel.app) |
+| **Problem 2** | 🏠 **Kaggle Boston Housing 波士頓房價預測** (CRISP-DM + 5 演算法) | 🔗 [https://temporary-nimble-silicon-jkupr2j.vercel.app/boston_housing.html](https://temporary-nimble-silicon-jkupr2j.vercel.app/boston_housing.html) |
+
+### 🔗 所有可用連結
+
+| 類型 | 連結 |
+|:---|:---|
+| 🚀 **Vercel 線上展示 (主頁 — 50 Startups)** | https://temporary-nimble-silicon-jkupr2j.vercel.app |
+| 🏠 **Vercel 線上展示 (Boston Housing)** | https://temporary-nimble-silicon-jkupr2j.vercel.app/boston_housing.html |
+| 🌐 **GitHub Pages (主頁 — 50 Startups)** | https://mumumush.github.io/1014/ |
+| 🏠 **GitHub Pages (Boston Housing)** | https://mumumush.github.io/1014/boston_housing.html |
+| 📁 **GitHub 專案倉庫** | https://github.com/mumumush/1014 |
+
+```bash
+# Git Clone 指令
+git clone https://github.com/mumumush/1014.git
+```
+
+---
+
+## ⭐ 加分功能說明 (Bonus Features)
+
+### ✅ 加分 +1：下拉視窗切換兩種問題
+
+兩個展示頁面頂部均設有**下拉選單 (Dropdown)** 可一鍵切換問題：
+- 🏢 50 Startups 新創獲利預測  ↔  🏠 Kaggle Boston Housing 波士頓房價預測
+
+### ✅ 加分 +2：可任意輸入 Dataset URL 即時分析
+
+每個頁面都設有「**🔗 自訂 Dataset URL 載入分析**」功能，支援：
+- 貼上任意 CSV 原始網址（如 GitHub Raw URL）
+- 瀏覽器端自動 fetch 並使用 PapaParse 解析 CSV
+- 純 JavaScript 矩陣運算執行 **OLS 多元線性回歸 (β = (X'X)⁻¹X'Y)**
+- 即時顯示：R²、RMSE、MAE、截距、各特徵係數、前 5 筆資料預覽
+
+**範例 Dataset URL（直接貼入輸入框即可）：**
+```
+https://raw.githubusercontent.com/Avik-Jain/100-Days-Of-ML-Code/master/datasets/50_Startups.csv
+```
 
 ---
 
@@ -135,12 +175,24 @@ $$\hat{y} = b_0 + b_1 X_1 + b_2 X_2 + \dots + b_k X_k$$
 
 ```text
 111/
-├── 50_Startups.csv                 # 50 家新創公司原始資料集
-├── 50_startup_crisp_dm.py          # CRISP-DM 完整可執行 Python 腳本
-├── 50_Startup_CRISP_DM.ipynb       # 具備說明與視覺化的 Jupyter Notebook
-├── actual_vs_predicted.png         # 模型預測 vs 實際散布圖
-├── startup_lr_model.pkl.gz         # 已訓練完成之壓縮部署模型
-└── README.md                       # 專案總結與說明文檔
+├── index.html                              # 🏢 50 Startups 互動展示網頁 (含下拉切換 & 自訂 URL)
+├── boston_housing.html                     # 🏠 Boston Housing 互動展示網頁 (含下拉切換 & 自訂 URL)
+├── 50_Startups.csv                         # 50 家新創公司原始資料集
+├── 50_startup_crisp_dm.py                  # 50 Startups CRISP-DM 完整 Python 腳本
+├── 50_Startup_CRISP_DM.ipynb               # 50 Startups Jupyter Notebook
+├── boston_housing_crisp_dm.py              # Boston Housing CRISP-DM Python 腳本
+├── boston_housing.csv                      # Boston Housing 原始資料集
+├── tsmc_2330_autoregression.py             # 台積電 2330.TW 股價自迴歸預測腳本
+├── 2330_TW.csv                             # 台積電股價歷史資料
+├── actual_vs_predicted.png                 # 50 Startups 實際 vs 預測散布圖
+├── all_5_algorithms_comparison_plot.png    # 50 Startups 5 大演算法比較圖
+├── boston_actual_vs_predicted.png          # Boston Housing 實際 vs 預測散布圖
+├── boston_all_5_algorithms_comparison_plot.png  # Boston Housing 5 大演算法比較圖
+├── tsmc_2330_stock_prediction.png          # 台積電股價預測圖
+├── startup_lr_model.pkl.gz                 # 50 Startups 壓縮部署模型
+├── boston_housing_model.pkl.gz             # Boston Housing 壓縮部署模型
+├── tsmc_2330_ar_model.pkl.gz               # 台積電自迴歸壓縮模型
+└── README.md                               # 專案總結與說明文檔
 ```
 
 ---
