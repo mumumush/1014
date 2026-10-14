@@ -113,8 +113,11 @@ $$\hat{y} = b_0 + b_1 X_1 + b_2 X_2 + \dots + b_k X_k$$
 > - 最佳模型為 **2 個特徵（R&D Spend + Marketing Spend）**，RMSE 達到最低點 **8,198.80** 且 $R^2$ 達全域最高 **0.9474**。
 > - 加入行政管理與地理州別變數反而引入雜訊，導致 RMSE 攀升。
 
-#### 3. 預測視覺化圖表
-已輸出高品質實際值與預測值對比圖：`actual_vs_predicted.png`。
+#### 3. 5 大特徵選取方法評測折線圖 (RMSE & R-squared 橫向對比)
+![5 Feature Selection Methods Comparison](all_5_algorithms_comparison_plot.png)
+
+#### 4. 實際值 vs 預測值對比散布圖 (Linear Regression vs Random Forest)
+![Actual vs Predicted Profit](actual_vs_predicted.png)
 
 ---
 

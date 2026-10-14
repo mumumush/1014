@@ -868,6 +868,20 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_
             </tr>
           </tbody>
         </table>
+
+        <!-- 5 Feature Selection Comparison Plot Embed -->
+        <div style="margin-top: 2rem; text-align: center; background: rgba(0,0,0,0.25); padding: 1.25rem; border-radius: 0.75rem; border: 1px solid var(--border-color);">
+          <h4 style="color: #93c5fd; margin-bottom: 0.8rem; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+            <i data-lucide="line-chart" style="color: #38bdf8; width: 20px;"></i>
+            5 大特徵選取方法評測折線圖 (RMSE & R-squared 橫向對比)
+          </h4>
+          <a href="all_5_algorithms_comparison_plot.png" target="_blank" title="點擊檢視高清大圖">
+            <img src="all_5_algorithms_comparison_plot.png" alt="5 大特徵選取方法評測對比圖 (all_5_algorithms_comparison_plot.png)" style="width: 100%; max-width: 960px; border-radius: 0.5rem; border: 1px solid rgba(255, 255, 255, 0.12); box-shadow: 0 8px 25px rgba(0,0,0,0.5);">
+          </a>
+          <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.75rem;">
+            📌 圖表包含 <strong>Lasso (L1 Ranking)、Forward SFS、RFE、ElasticNet Ranking、Exhaustive Search</strong> 5 大特徵選取方法在 1 到 5 個特徵下的 RMSE (越低越好) 與 R² (越高越好) 走勢。
+          </p>
+        </div>
       </div>
 
       <!-- Phase 6 Content -->

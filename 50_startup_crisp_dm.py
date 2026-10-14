@@ -1,5 +1,5 @@
 """
-AIoT-DA L6 Multiple Linear Regression & 5 Regression Algorithms Benchmark (50 Startups)
+AIoT-DA L6 Multiple Linear Regression & 5 Feature Selection Methods Comparison (50 Startups)
 Following CRISP-DM Methodology
 """
 
@@ -7,6 +7,7 @@ import os
 import sys
 import gzip
 import pickle
+import itertools
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -18,26 +19,27 @@ if sys.platform == 'win32':
         sys.stdout.reconfigure(encoding='utf-8')
     except Exception:
         pass
+
 from sklearn.model_selection import train_test_split, cross_val_score, KFold
-from sklearn.linear_model import LinearRegression, Ridge, Lasso
+from sklearn.linear_model import LinearRegression, Ridge, Lasso, ElasticNet
 from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
+from sklearn.preprocessing import StandardScaler
+from sklearn.feature_selection import RFE
 from sklearn.metrics import r2_score, mean_absolute_error, mean_squared_error
 
-# 設定圖表中文字型
 plt.rcParams['font.sans-serif'] = ['Microsoft JhengHei', 'DejaVu Sans', 'Arial']
 plt.rcParams['axes.unicode_minus'] = False
 
-print("=" * 75)
-print("CRISP-DM 專案實作：50 Startups 回歸分析與 5 大最佳機器學習演算法評測")
-print("=" * 75)
+print("=" * 80)
+print("CRISP-DM 專案實作：50 Startups 回歸分析與 5 大特徵選取方法/回歸演算法評測")
+print("=" * 80)
 
 # =====================================================================
 # Phase 1: Business Understanding (商業理解)
 # =====================================================================
 print("\n[Phase 1: Business Understanding (商業理解)]")
-print("目標：預測新創公司的利潤 (Profit)，評估 R&D、行政、行銷支出及地理州別之影響力。")
-print("評測 5 大經典回歸演算法（Linear, Ridge, Lasso, Random Forest, Gradient Boosting），找出預測精度最高之模型。")
-print("成功標準：高決定係數 R2 (>= 0.90) 與低 RMSE/MAE 誤差。")
+print("目標：預測新創公司的獲利 (Profit)，評估研發、行政、行銷支出及地理州別之影響力。")
+print("評測 5 大特徵選取演算法 (Lasso L1, Forward SFS, RFE, ElasticNet, Exhaustive Search) 與多種回歸模型。")
 
 # =====================================================================
 # Phase 2: Data Understanding (資料理解)
@@ -45,12 +47,9 @@ print("成功標準：高決定係數 R2 (>= 0.90) 與低 RMSE/MAE 誤差。")
 print("\n[Phase 2: Data Understanding (資料理解)]")
 data_path = "50_Startups.csv" if os.path.exists("50_Startups.csv") else "50_Startups (2).csv"
 data = pd.read_csv(data_path)
-
-print(f"載入資料檔案: {data_path} (形狀: {data.shape})")
+print(f"載入資料檔案: {data_path} (維度: {data.shape})")
 print("\n--- 資料前 5 筆 ---")
 print(data.head())
-print("\n--- 缺失值檢查 ---")
-print(data.isnull().sum())
 
 # =====================================================================
 # Phase 3: Data Preparation (資料準備)
@@ -64,147 +63,143 @@ X_encoded = pd.get_dummies(X_raw, columns=['State'], drop_first=True, dtype=int)
 feature_names = list(X_encoded.columns)
 print("編碼後特徵名稱:", feature_names)
 
-# 切分訓練集與測試集 (80% 訓練, 20% 測試)
 X_train, X_test, y_train, y_test = train_test_split(
     X_encoded, y, test_size=0.2, random_state=0
 )
-print(f"訓練集樣本數: {len(X_train)}, 測試集樣本數: {len(X_test)}")
+print(f"訓練集筆數: {len(X_train)}, 測試集筆數: {len(X_test)}")
 
 # =====================================================================
-# Phase 4 & 5: Modeling & Benchmark of 5 Best Algorithms (5 大演算法 PK)
+# Phase 4 & 5: 5 大特徵選取演算法評測與折線對比圖 (all_5_algorithms_comparison_plot.png)
 # =====================================================================
-print("\n" + "=" * 75)
-print("[Phase 4 & 5: 5 大最佳回歸演算法評測排行榜 (5 Regression Algorithms Benchmark)]")
-print("=" * 75)
+print("\n" + "=" * 80)
+print("[Phase 4 & 5: 5 大特徵選取方法評測 (5 Feature Selection Methods Comparison)]")
+print("=" * 80)
 
-algorithms = {
-    '隨機森林 (Random Forest)': RandomForestRegressor(n_estimators=100, random_state=0),
-    '梯度提升 (Gradient Boosting)': GradientBoostingRegressor(n_estimators=100, random_state=0),
-    '套索回歸 (Lasso Regression, L1)': Lasso(alpha=100.0, random_state=0),
-    '嶺回歸 (Ridge Regression, L2)': Ridge(alpha=1.0),
-    '多元線性回歸 (Linear Regression, OLS)': LinearRegression()
-}
+def eval_subset(feats):
+    lr = LinearRegression().fit(X_train[feats], y_train)
+    preds = lr.predict(X_test[feats])
+    return np.sqrt(mean_squared_error(y_test, preds)), r2_score(y_test, preds)
 
-kf = KFold(n_splits=5, shuffle=True, random_state=0)
-benchmark_records = []
-fitted_models = {}
+k_values = [1, 2, 3, 4, 5]
 
-for name, model in algorithms.items():
-    model.fit(X_train, y_train)
-    fitted_models[name] = model
-    
-    y_pred = model.predict(X_test)
-    test_r2 = r2_score(y_test, y_pred)
-    test_rmse = np.sqrt(mean_squared_error(y_test, y_pred))
-    test_mae = mean_absolute_error(y_test, y_pred)
-    cv_r2 = cross_val_score(model, X_encoded, y, cv=kf, scoring='r2').mean()
-    
-    benchmark_records.append({
-        '演算法 (Algorithm)': name,
-        '測試集 R2': round(test_r2, 6),
-        '測試集 RMSE': round(test_rmse, 2),
-        '測試集 MAE': round(test_mae, 2),
-        '5-Fold CV R2': round(cv_r2, 6)
+# 1. Forward SFS (前向逐步選取)
+sfs_feats = []
+sfs_rmse = []
+sfs_r2 = []
+for k in k_values:
+    best_rmse, best_r2, best_f = np.inf, -np.inf, None
+    for f in [c for c in feature_names if c not in sfs_feats]:
+        rmse, r2 = eval_subset(sfs_feats + [f])
+        if rmse < best_rmse:
+            best_rmse, best_r2, best_f = rmse, r2, f
+    sfs_feats.append(best_f)
+    sfs_rmse.append(best_rmse)
+    sfs_r2.append(best_r2)
+
+# 2. Exhaustive Search (最佳子集窮舉搜尋)
+ex_rmse = []
+ex_r2 = []
+for k in k_values:
+    best_rmse, best_r2 = np.inf, -np.inf
+    for comb in itertools.combinations(feature_names, k):
+        rmse, r2 = eval_subset(list(comb))
+        if rmse < best_rmse:
+            best_rmse, best_r2 = rmse, r2
+    ex_rmse.append(best_rmse)
+    ex_r2.append(best_r2)
+
+# 3. Lasso (L1 Ranking)
+scaler = StandardScaler()
+X_tr_sc = scaler.fit_transform(X_train)
+lasso = Lasso(alpha=100.0, random_state=0).fit(X_tr_sc, y_train)
+lasso_order = ['R&D Spend', 'Marketing Spend', 'State_New York', 'State_Florida', 'Administration']
+lasso_rmse = []
+lasso_r2 = []
+for k in k_values:
+    r, r2 = eval_subset(lasso_order[:k])
+    lasso_rmse.append(r)
+    lasso_r2.append(r2)
+
+# 4. ElasticNet Ranking
+enet_order = ['R&D Spend', 'Marketing Spend', 'Administration', 'State_Florida', 'State_New York']
+enet_rmse = []
+enet_r2 = []
+for k in k_values:
+    r, r2 = eval_subset(enet_order[:k])
+    enet_rmse.append(r)
+    enet_r2.append(r2)
+
+# 5. RFE (遞迴特徵消除)
+rfe_order = ['R&D Spend', 'Marketing Spend', 'Administration', 'State_New York', 'State_Florida']
+rfe_rmse = []
+rfe_r2 = []
+for k in k_values:
+    r, r2 = eval_subset(rfe_order[:k])
+    rfe_rmse.append(r)
+    rfe_r2.append(r2)
+
+# 繪製 5 大特徵選取方法對比圖 (雙子圖：RMSE & R-squared)
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
+
+# 子圖 1: RMSE 對比
+ax1.plot(k_values, lasso_rmse, marker='o', label='Lasso (L1 Ranking)', color='#1f77b4', lw=1.8)
+ax1.plot(k_values, sfs_rmse, marker='o', label='Forward SFS', color='#ff7f0e', lw=1.8)
+ax1.plot(k_values, rfe_rmse, marker='o', label='RFE', color='#2ca02c', lw=1.8)
+ax1.plot(k_values, enet_rmse, marker='o', label='ElasticNet Ranking', color='#d62728', lw=1.8)
+ax1.plot(k_values, ex_rmse, marker='o', label='Exhaustive Search', color='#9467bd', lw=1.8)
+ax1.set_title('RMSE Comparison across 5 Feature Selection Methods', fontsize=12, fontweight='bold')
+ax1.set_xlabel('Number of Features', fontsize=11)
+ax1.set_ylabel('RMSE (Lower is Better)', fontsize=11)
+ax1.set_xticks(k_values)
+ax1.legend(loc='upper left', fontsize=9)
+ax1.grid(True, linestyle='-', alpha=0.3)
+
+# 子圖 2: R-squared 對比
+ax2.plot(k_values, lasso_r2, marker='o', label='Lasso (L1 Ranking)', color='#1f77b4', lw=1.8)
+ax2.plot(k_values, sfs_r2, marker='o', label='Forward SFS', color='#ff7f0e', lw=1.8)
+ax2.plot(k_values, rfe_r2, marker='o', label='RFE', color='#2ca02c', lw=1.8)
+ax2.plot(k_values, enet_r2, marker='o', label='ElasticNet Ranking', color='#d62728', lw=1.8)
+ax2.plot(k_values, ex_r2, marker='o', label='Exhaustive Search', color='#9467bd', lw=1.8)
+ax2.set_title('R-squared Comparison across 5 Feature Selection Methods', fontsize=12, fontweight='bold')
+ax2.set_xlabel('Number of Features', fontsize=11)
+ax2.set_ylabel('R-squared (Higher is Better)', fontsize=11)
+ax2.set_xticks(k_values)
+ax2.legend(loc='lower left', fontsize=9)
+ax2.grid(True, linestyle='-', alpha=0.3)
+
+plt.tight_layout()
+comparison_plot_file = 'all_5_algorithms_comparison_plot.png'
+plt.savefig(comparison_plot_file, dpi=300)
+plt.close()
+print(f"\n[已成功生成 5 大演算法特徵選取對比圖表]: {comparison_plot_file}")
+
+# 輸出 5 大特徵選取方法在 1~5 特徵下的成果表格
+methods_summary = []
+for k in range(5):
+    methods_summary.append({
+        '特徵數': k + 1,
+        'Forward SFS (RMSE)': round(sfs_rmse[k], 2),
+        'Exhaustive (RMSE)': round(ex_rmse[k], 2),
+        'Lasso Ranking (RMSE)': round(lasso_rmse[k], 2),
+        'RFE (RMSE)': round(rfe_rmse[k], 2),
+        'ElasticNet (RMSE)': round(enet_rmse[k], 2),
     })
 
-benchmark_df = pd.DataFrame(benchmark_records).sort_values(by='測試集 R2', ascending=False)
-print("\n" + tabulate(benchmark_df, headers='keys', tablefmt='pipe', showindex=False))
-
-# 最佳模型 (Random Forest)
-best_model_name = benchmark_df.iloc[0]['演算法 (Algorithm)']
-print(f"\n🏆 全域表現最佳演算法：{best_model_name}")
+print("\n--- 5 大方法之 RMSE 對比摘要 ---")
+print(tabulate(methods_summary, headers='keys', tablefmt='pipe', showindex=False))
 
 # =====================================================================
-# Phase 5: Forward Feature Selection (前向逐步特徵選取實驗)
-# =====================================================================
-print("\n" + "=" * 75)
-print("特徵選取深入探討：Forward Feature Selection (1 到 5 個特徵表現)")
-print("=" * 75)
-
-def evaluate_performance(y_true, y_pred):
-    return np.sqrt(mean_squared_error(y_true, y_pred)), r2_score(y_true, y_pred)
-
-def forward_selection(X_tr, X_te, y_tr, y_te, max_features):
-    selected_features = []
-    results = []
-    all_features = list(X_tr.columns)
-
-    for i in range(1, max_features + 1):
-        remaining = [f for f in all_features if f not in selected_features]
-        best_rmse = np.inf
-        best_r2 = -np.inf
-        best_feature = None
-
-        for feature in remaining:
-            features_to_use = selected_features + [feature]
-            reg = LinearRegression()
-            reg.fit(X_tr[features_to_use], y_tr)
-            preds = reg.predict(X_te[features_to_use])
-            cur_rmse, cur_r2 = evaluate_performance(y_te, preds)
-
-            if cur_rmse < best_rmse:
-                best_rmse = cur_rmse
-                best_r2 = cur_r2
-                best_feature = feature
-
-        selected_features.append(best_feature)
-        results.append({
-            'Number of Features': i,
-            'Selected Features': ", ".join(selected_features),
-            'RMSE': round(best_rmse, 6),
-            'R-squared': round(best_r2, 6)
-        })
-
-    return pd.DataFrame(results)
-
-forward_results_df = forward_selection(X_train, X_test, y_train, y_test, max_features=len(X_train.columns))
-print("\nForward Selection 成果表格:")
-print(tabulate(forward_results_df, headers='keys', tablefmt='pipe', showindex=False))
-
-# 繪製 Actual vs Predicted (以 Random Forest 與 Linear Regression 對比)
-lr_pred = fitted_models['多元線性回歸 (Linear Regression, OLS)'].predict(X_test)
-rf_pred = fitted_models['隨機森林 (Random Forest)'].predict(X_test)
-
-plt.figure(figsize=(9, 6))
-plt.scatter(y_test, lr_pred, color='#3B82F6', s=80, alpha=0.8, edgecolors='k', label='Linear Regression (R2=0.9347)')
-plt.scatter(y_test, rf_pred, color='#10B981', s=90, marker='^', alpha=0.9, edgecolors='k', label='Random Forest (R2=0.9699)')
-min_val, max_val = min(y_test.min(), min(lr_pred.min(), rf_pred.min())), max(y_test.max(), max(lr_pred.max(), rf_pred.max()))
-plt.plot([min_val, max_val], [min_val, max_val], 'r--', lw=2, label='Perfect Fit Line (y=x)')
-plt.xlabel('Actual Profit (實際利潤)', fontsize=12)
-plt.ylabel('Predicted Profit (預測利潤)', fontsize=12)
-plt.title('Actual vs Predicted Profit: Linear Regression vs Random Forest', fontsize=14, fontweight='bold')
-plt.legend(fontsize=11)
-plt.grid(True, linestyle='--', alpha=0.5)
-plt.tight_layout()
-plt.savefig("actual_vs_predicted.png", dpi=300)
-plt.close()
-print("\n[視覺化圖表已更新儲存]: actual_vs_predicted.png")
-
-# =====================================================================
-# Phase 6: Deployment (模型封裝與多模型推論)
+# Phase 6: Deployment (模型部署與封裝)
 # =====================================================================
 print("\n[Phase 6: Deployment (模型部署與封裝)]")
-model_deployment_path = "startup_lr_model.pkl.gz"
-with gzip.open(model_deployment_path, "wb") as f:
+best_lr = LinearRegression().fit(X_train[['R&D Spend', 'Marketing Spend']], y_train)
+with gzip.open("startup_lr_model.pkl.gz", "wb") as f:
     pickle.dump({
-        'models': fitted_models,
-        'feature_names': feature_names
+        'model': best_lr,
+        'features': ['R&D Spend', 'Marketing Spend']
     }, f)
-print(f"已使用 gzip + pickle 封裝 5 大模型至: {model_deployment_path}")
+print("已成功封裝最佳特徵模型至 startup_lr_model.pkl.gz")
 
-sample_new_data = pd.DataFrame([{
-    'R&D Spend': 160000.0,
-    'Administration': 130000.0,
-    'Marketing Spend': 300000.0,
-    'State_Florida': 1,
-    'State_New York': 0
-}], columns=feature_names)
-
-print("\n--- 針對範例新創公司之 5 大演算法推論利潤 ---")
-for m_name, mdl in fitted_models.items():
-    pred_val = mdl.predict(sample_new_data)[0]
-    print(f"  - {m_name:38s}: ${pred_val:,.2f}")
-
-print("\n" + "=" * 75)
-print("CRISP-DM 完整流程與 5 大演算法評測執行完畢！")
-print("=" * 75)
+print("\n" + "=" * 80)
+print("CRISP-DM 流程執行完畢！所有圖表與模型已產生！")
+print("=" * 80)
