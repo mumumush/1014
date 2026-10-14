@@ -484,6 +484,24 @@
 <body>
 
   <div class="container">
+    <!-- Top Project Switcher Bar -->
+    <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(17, 24, 39, 0.85); backdrop-filter: blur(12px); border: 1px solid var(--border-color); border-radius: 0.75rem; padding: 0.6rem 1.25rem; margin-bottom: 2rem;">
+      <div style="display: flex; align-items: center; gap: 0.75rem;">
+        <i data-lucide="folder-git-2" style="color: #60a5fa; width: 18px; height: 18px;"></i>
+        <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted);">切換專案主題：</span>
+        <select style="background: #1e293b; color: #fff; border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 0.5rem; padding: 0.45rem 1rem; font-size: 0.88rem; font-weight: 600; cursor: pointer; outline: none;" onchange="window.location.href=this.value">
+          <option value="index.html" selected>🏢 50 Startups (新創獲利預測)</option>
+          <option value="boston_housing.html">🏠 Kaggle Boston Housing (波士頓房價預測)</option>
+        </select>
+      </div>
+      <div>
+        <a href="boston_housing.html" class="btn btn-secondary" style="padding: 0.4rem 0.85rem; font-size: 0.85rem;">
+          <i data-lucide="arrow-right" style="width: 14px; height: 14px;"></i>
+          前往 Boston Housing
+        </a>
+      </div>
+    </div>
+
     <!-- Header -->
     <header>
       <div class="badge-pill">
