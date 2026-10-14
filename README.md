@@ -17,7 +17,8 @@
 
 ## 🌐 線上展示與程式碼庫 (Demo Site & Repository)
 
-- **🚀 線上互動展示網站 (Live Web Demo)**: [https://mumumush.github.io/1014/](https://mumumush.github.io/1014/)
+- **🚀 線上即時展示網站 (Vercel Live Demo)**: [https://temporary-nimble-silicon-jkupr2j.vercel.app](https://temporary-nimble-silicon-jkupr2j.vercel.app)
+- **🌐 GitHub Pages 網站**: [https://mumumush.github.io/1014/](https://mumumush.github.io/1014/)
 - **GitHub 專案倉庫 (Repository)**: [https://github.com/mumumush/1014](https://github.com/mumumush/1014)
 - **Git Clone 指令**:
   ```bash
