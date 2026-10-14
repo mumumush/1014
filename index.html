@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>50 Startups 利潤預測多元線性回歸 | CRISP-DM 互動展示系統</title>
+  <meta name="description" content="基於 CRISP-DM 流程之 50 Startups 多元線性回歸分析與即時利潤預測系統">
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    :root {
+      --bg-primary: #0b0f19;
+      --bg-secondary: #111827;
+      --bg-card: rgba(17, 24, 39, 0.75);
+      --bg-card-hover: rgba(31, 41, 55, 0.85);
+      --border-color: rgba(255, 255, 255, 0.08);
+      --border-focus: #3b82f6;
+      --accent-blue: #3b82f6;
+      --accent-indigo: #6366f1;
+      --accent-cyan: #06b6d4;
+      --accent-emerald: #10b981;
+      --accent-purple: #8b5cf6;
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --text-dim: #6b7280;
+      --glass-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.5);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', 'Noto Sans TC', sans-serif;
+      background-color: var(--bg-primary);
+      color: var(--text-main);
+      line-height: 1.6;
+      min-height: 100vh;
+      background-image: 
+        radial-gradient(circle at 15% 20%, rgba(59, 130, 246, 0.12) 0%, transparent 40%),
+        radial-gradient(circle at 85% 75%, rgba(139, 92, 246, 0.12) 0%, transparent 40%);
+      background-attachment: fixed;
+    }
+
+    /* Container */
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem;
+    }
+
+    /* Header & Hero */
+    header {
+      text-align: center;
+      margin-bottom: 3rem;
+      padding-top: 1rem;
+    }
+
+    .badge-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(59, 130, 246, 0.15);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      color: #93c5fd;
+      padding: 0.4rem 1rem;
+      border-radius: 9999px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      margin-bottom: 1.25rem;
+      backdrop-filter: blur(8px);
+    }
+
+    h1 {
+      font-size: 2.6rem;
+      font-weight: 800;
+      letter-spacing: -0.025em;
+      background: linear-gradient(135deg, #ffffff 30%, #93c5fd 70%, #c084fc 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 1rem;
+    }
+
+    .subtitle {
+      color: var(--text-muted);
+      font-size: 1.15rem;
+      max-width: 750px;
+      margin: 0 auto 1.5rem auto;
+    }
+
+    .header-links {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.6rem 1.2rem;
+      border-radius: 0.5rem;
+      font-weight: 600;
+      font-size: 0.95rem;
+      text-decoration: none;
+      transition: all 0.2s ease;
+      cursor: pointer;
+      border: none;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #2563eb, #4f46e5);
+      color: white;
+      box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+    }
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #1d4ed8, #4338ca);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(37, 99, 235, 0.5);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      backdrop-filter: blur(8px);
+    }
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.2);
+      transform: translateY(-2px);
+    }
+
+    /* Grid Layout */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      margin-bottom: 3rem;
+    }
+
+    @media (max-width: 960px) {
+      .main-grid {
+        grid-template-columns: 1fr;
+      }
+      h1 { font-size: 2rem; }
+    }
+
+    /* Glass Card */
+    .card {
+      background: var(--bg-card);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--border-color);
+      border-radius: 1rem;
+      padding: 1.75rem;
+      box-shadow: var(--glass-shadow);
+      transition: border-color 0.2s ease;
+    }
+    .card:hover {
+      border-color: rgba(255, 255, 255, 0.16);
+    }
+
+    .card-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      margin-bottom: 1.25rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    /* Predictor Form */
+    .form-group {
+      margin-bottom: 1.25rem;
+    }
+
+    .form-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      margin-bottom: 0.4rem;
+    }
+
+    .form-val-display {
+      color: var(--accent-cyan);
+      font-weight: 600;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      height: 6px;
+      background: #1f2937;
+      border-radius: 5px;
+      outline: none;
+      appearance: none;
+      -webkit-appearance: none;
+      cursor: pointer;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--accent-blue);
+      cursor: pointer;
+      box-shadow: 0 0 10px rgba(59, 130, 246, 0.8);
+      transition: transform 0.1s ease;
+    }
+    input[type="range"]::-webkit-slider-thumb:hover {
+      transform: scale(1.2);
+    }
+
+    .number-input-row {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 0.35rem;
+    }
+
+    input[type="number"], select {
+      width: 100%;
+      padding: 0.6rem 0.8rem;
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 0.5rem;
+      color: #fff;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.2s ease;
+    }
+    input[type="number"]:focus, select:focus {
+      border-color: var(--border-focus);
+    }
+
+    .preset-btns {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 1rem;
+      flex-wrap: wrap;
+    }
+    .preset-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-color);
+      color: var(--text-muted);
+      padding: 0.35rem 0.75rem;
+      border-radius: 0.4rem;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .preset-btn:hover {
+      background: rgba(59, 130, 246, 0.2);
+      color: #93c5fd;
+      border-color: rgba(59, 130, 246, 0.4);
+    }
+
+    /* Result Box */
+    .result-box {
+      background: linear-gradient(135deg, rgba(30, 58, 138, 0.35), rgba(88, 28, 135, 0.25));
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      border-radius: 0.75rem;
+      padding: 1.5rem;
+      text-align: center;
+      margin-top: 1.5rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .result-label {
+      font-size: 0.9rem;
+      color: #93c5fd;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 600;
+      margin-bottom: 0.4rem;
+    }
+
+    .result-amount {
+      font-size: 2.5rem;
+      font-weight: 800;
+      color: #fff;
+      text-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+    }
+
+    .result-formula {
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      margin-top: 0.75rem;
+    }
+
+    /* Stats Overview */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+    }
+    .stat-item {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border-color);
+      border-radius: 0.5rem;
+      padding: 1rem;
+    }
+    .stat-label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 0.25rem;
+    }
+    .stat-value {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: #fff;
+    }
+    .stat-badge {
+      font-size: 0.75rem;
+      color: var(--accent-emerald);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.2rem;
+      margin-top: 0.2rem;
+    }
+
+    /* CRISP-DM Tabs */
+    .tabs-nav {
+      display: flex;
+      gap: 0.5rem;
+      overflow-x: auto;
+      padding-bottom: 0.5rem;
+      margin-bottom: 1.5rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 0.7rem 1.2rem;
+      border-radius: 0.5rem;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .tab-btn:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.05);
+    }
+    .tab-btn.active {
+      color: #fff;
+      background: linear-gradient(135deg, rgba(37, 99, 235, 0.3), rgba(79, 70, 229, 0.3));
+      border: 1px solid rgba(59, 130, 246, 0.5);
+    }
+
+    .tab-content {
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+    .tab-content.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Tables */
+    .styled-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+      margin-top: 1rem;
+    }
+    .styled-table th, .styled-table td {
+      padding: 0.75rem 1rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .styled-table th {
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 0.75rem;
+      letter-spacing: 0.05em;
+    }
+    .styled-table tr:hover {
+      background: rgba(255, 255, 255, 0.02);
+    }
+    .styled-table .highlight {
+      color: var(--accent-emerald);
+      font-weight: 600;
+    }
+
+    /* Code block */
+    pre {
+      background: #090d16;
+      border: 1px solid var(--border-color);
+      border-radius: 0.5rem;
+      padding: 1rem;
+      overflow-x: auto;
+      font-family: 'Consolas', monospace;
+      font-size: 0.85rem;
+      color: #93c5fd;
+      margin-top: 0.75rem;
+    }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      padding: 2.5rem 0;
+      color: var(--text-dim);
+      font-size: 0.85rem;
+      border-top: 1px solid var(--border-color);
+      margin-top: 3rem;
+    }
+    footer a {
+      color: #93c5fd;
+      text-decoration: none;
+    }
+    footer a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <!-- Header -->
+    <header>
+      <div class="badge-pill">
+        <i data-lucide="sparkles" style="width: 14px; height: 14px;"></i>
+        AIoT-DA L6 Multiple Linear Regression (50 Startups)
+      </div>
+      <h1>50 Startups 獲利預測與 CRISP-DM 互動系統</h1>
+      <p class="subtitle">
+        遵循跨產業資料探勘方法論（CRISP-DM），探索 R&D、行政、行銷支出及州別對利潤的影響，並實現即時多元線性回歸推論。
+      </p>
+      <div class="header-links">
+        <a href="https://github.com/mumumush/1014" target="_blank" class="btn btn-primary" id="btn-github">
+          <i data-lucide="github" style="width: 18px; height: 18px;"></i>
+          檢視 GitHub 專案倉庫
+        </a>
+        <a href="#predictor-section" class="btn btn-secondary">
+          <i data-lucide="calculator" style="width: 18px; height: 18px;"></i>
+          即時利潤試算
+        </a>
+        <a href="#crisp-section" class="btn btn-secondary">
+          <i data-lucide="layers" style="width: 18px; height: 18px;"></i>
+          CRISP-DM 流程詳解
+        </a>
+      </div>
+    </header>
+
+    <!-- Main Grid: Predictor & Overview -->
+    <div class="main-grid" id="predictor-section">
+      <!-- Calculator Card -->
+      <div class="card">
+        <div class="card-title">
+          <i data-lucide="sliders" style="color: var(--accent-blue);"></i>
+          即時利潤預測計算器 (Live Predictor)
+        </div>
+
+        <form id="prediction-form" onsubmit="event.preventDefault(); calculateProfit();">
+          <!-- R&D Spend -->
+          <div class="form-group">
+            <div class="form-label">
+              <span>🔬 研發支出 (R&D Spend)</span>
+              <span class="form-val-display" id="rnd-display">$160,000</span>
+            </div>
+            <input type="range" id="rnd-range" min="0" max="200000" step="1000" value="160000" oninput="syncInput('rnd', this.value)">
+            <div class="number-input-row">
+              <input type="number" id="rnd-input" min="0" max="300000" value="160000" onchange="syncRange('rnd', this.value)">
+            </div>
+          </div>
+
+          <!-- Administration -->
+          <div class="form-group">
+            <div class="form-label">
+              <span>🏢 行政管理支出 (Administration)</span>
+              <span class="form-val-display" id="admin-display">$130,000</span>
+            </div>
+            <input type="range" id="admin-range" min="0" max="200000" step="1000" value="130000" oninput="syncInput('admin', this.value)">
+            <div class="number-input-row">
+              <input type="number" id="admin-input" min="0" max="300000" value="130000" onchange="syncRange('admin', this.value)">
+            </div>
+          </div>
+
+          <!-- Marketing Spend -->
+          <div class="form-group">
+            <div class="form-label">
+              <span>📈 行銷支出 (Marketing Spend)</span>
+              <span class="form-val-display" id="mkt-display">$300,000</span>
+            </div>
+            <input type="range" id="mkt-range" min="0" max="500000" step="2000" value="300000" oninput="syncInput('mkt', this.value)">
+            <div class="number-input-row">
+              <input type="number" id="mkt-input" min="0" max="600000" value="300000" onchange="syncRange('mkt', this.value)">
+            </div>
+          </div>
+
+          <!-- State -->
+          <div class="form-group">
+            <div class="form-label">
+              <span>📍 所在州別 (State Location)</span>
+            </div>
+            <select id="state-select" onchange="calculateProfit()">
+              <option value="Florida" selected>Florida (佛羅里達州)</option>
+              <option value="New York">New York (紐約州)</option>
+              <option value="California">California (加州 - 基準類別)</option>
+            </select>
+          </div>
+
+          <!-- Presets -->
+          <div class="form-label" style="margin-top: 1rem;">快速範例模式：</div>
+          <div class="preset-btns">
+            <button type="button" class="preset-btn" onclick="applyPreset(165349, 136897, 471784, 'New York')">👑 榜首高研發型</button>
+            <button type="button" class="preset-btn" onclick="applyPreset(73721, 121344, 211025, 'California')">⚖️ 平均平衡型</button>
+            <button type="button" class="preset-btn" onclick="applyPreset(1000, 100000, 20000, 'California')">⚠️ 低研發高行政</button>
+          </div>
+
+          <!-- Prediction Result -->
+          <div class="result-box">
+            <div class="result-label">多元線性回歸預測獲利 (Predicted Profit)</div>
+            <div class="result-amount" id="result-amount">$180,607.64</div>
+            <div class="result-formula" id="result-breakdown">
+              基準 Intercept ($42,554) + R&D 貢獻 + Admin 貢獻 + Marketing 貢獻 + 州別修正
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <!-- Model Performance & Coefficients -->
+      <div class="card">
+        <div class="card-title">
+          <i data-lucide="bar-chart-3" style="color: var(--accent-emerald);"></i>
+          模型效能指標 (Metrics & Coefficients)
+        </div>
+
+        <div class="stats-grid" style="margin-bottom: 1.5rem;">
+          <div class="stat-item">
+            <div class="stat-label">決定係數 (R-squared)</div>
+            <div class="stat-value" style="color: #60a5fa;">0.9347</div>
+            <div class="stat-badge"><i data-lucide="check-circle-2" style="width: 13px;"></i> 測試集解釋力 93.5%</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">均方根誤差 (RMSE)</div>
+            <div class="stat-value" style="color: #34d399;">$9,137.99</div>
+            <div class="stat-badge"><i data-lucide="check-circle-2" style="width: 13px;"></i> 低誤差水準</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">平均絕對誤差 (MAE)</div>
+            <div class="stat-value" style="color: #f472b6;">$7,514.29</div>
+            <div class="stat-badge">平均預測偏差幅度</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">訓練集 R-squared</div>
+            <div class="stat-value" style="color: #a78bfa;">0.9502</div>
+            <div class="stat-badge"><i data-lucide="shield-check" style="width: 13px;"></i> 穩健無過擬合</div>
+          </div>
+        </div>
+
+        <div class="form-label" style="margin-bottom: 0.5rem; font-weight: 600; color: #fff;">
+          特徵回歸係數 (Feature Weights):
+        </div>
+        <div style="height: 220px;">
+          <canvas id="coefChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- CRISP-DM Section -->
+    <div class="card" id="crisp-section" style="margin-bottom: 3rem;">
+      <div class="card-title">
+        <i data-lucide="compass" style="color: var(--accent-purple);"></i>
+        CRISP-DM 跨產業標準作業流程 (6 大階段實作)
+      </div>
+
+      <!-- Tabs Navigation -->
+      <div class="tabs-nav">
+        <button class="tab-btn active" onclick="switchTab(event, 'phase1')">
+          <i data-lucide="briefcase" style="width: 16px;"></i> Phase 1 商業理解
+        </button>
+        <button class="tab-btn" onclick="switchTab(event, 'phase2')">
+          <i data-lucide="database" style="width: 16px;"></i> Phase 2 資料理解
+        </button>
+        <button class="tab-btn" onclick="switchTab(event, 'phase3')">
+          <i data-lucide="git-fork" style="width: 16px;"></i> Phase 3 資料準備
+        </button>
+        <button class="tab-btn" onclick="switchTab(event, 'phase4')">
+          <i data-lucide="cpu" style="width: 16px;"></i> Phase 4 模型建立
+        </button>
+        <button class="tab-btn" onclick="switchTab(event, 'phase5')">
+          <i data-lucide="check-square" style="width: 16px;"></i> Phase 5 評估與特徵挑選
+        </button>
+        <button class="tab-btn" onclick="switchTab(event, 'phase6')">
+          <i data-lucide="rocket" style="width: 16px;"></i> Phase 6 部署與封裝
+        </button>
+      </div>
+
+      <!-- Phase 1 Content -->
+      <div class="tab-content active" id="phase1">
+        <h3 style="color: #93c5fd; margin-bottom: 0.5rem;">Phase 1: Business Understanding (商業理解)</h3>
+        <p style="color: var(--text-muted); margin-bottom: 1rem;">
+          新創投資具備高度不確定性。透過機器學習分析真實 50 家新創公司財務花費，量化不同投入項目（研發、行政、行銷）產生的投資回報率（ROI），協助創投評估融資決策。
+        </p>
+        <ul style="color: var(--text-muted); margin-left: 1.5rem; line-height: 1.8;">
+          <li><strong>目標定義</strong>：建立利潤預測模型，找出獲利槓桿最高的花費特徵。</li>
+          <li><strong>成功標準</strong>：決定係數 $R^2 \ge 0.90$，且 RMSE 誤差在可解釋範圍內。</li>
+          <li><strong>利益關係人</strong>：創投經理人、新創執行長、財務諮詢專家。</li>
+        </ul>
+      </div>
+
+      <!-- Phase 2 Content -->
+      <div class="tab-content" id="phase2">
+        <h3 style="color: #93c5fd; margin-bottom: 0.5rem;">Phase 2: Data Understanding (資料理解)</h3>
+        <p style="color: var(--text-muted); margin-bottom: 1rem;">
+          載入 Kaggle 50 Startups 資料集（共 50 筆紀錄，5 個欄位），確認資料品質良好（0 個缺失值）。
+        </p>
+        <table class="styled-table">
+          <thead>
+            <tr>
+              <th>R&D Spend</th>
+              <th>Administration</th>
+              <th>Marketing Spend</th>
+              <th>State</th>
+              <th>Profit</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>$165,349.20</td><td>$136,897.80</td><td>$471,784.10</td><td>New York</td><td class="highlight">$192,261.83</td></tr>
+            <tr><td>$162,597.70</td><td>$151,377.59</td><td>$443,898.53</td><td>California</td><td class="highlight">$191,792.06</td></tr>
+            <tr><td>$153,441.51</td><td>$101,145.55</td><td>$407,934.54</td><td>Florida</td><td class="highlight">$191,050.39</td></tr>
+            <tr><td>$144,372.41</td><td>$118,671.85</td><td>$383,199.62</td><td>New York</td><td class="highlight">$182,901.99</td></tr>
+            <tr><td>$142,107.34</td><td>$91,391.77</td><td>$366,168.42</td><td>Florida</td><td class="highlight">$166,187.94</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Phase 3 Content -->
+      <div class="tab-content" id="phase3">
+        <h3 style="color: #93c5fd; margin-bottom: 0.5rem;">Phase 3: Data Preparation (資料準備)</h3>
+        <p style="color: var(--text-muted); margin-bottom: 1rem;">
+          針對類別型特徵（State）進行獨熱編碼（One-Hot Encoding），並務必避開 <strong>虛擬變數陷阱 (Dummy Variable Trap)</strong>。
+        </p>
+        <div style="background: rgba(239, 68, 68, 0.1); border-left: 4px solid #ef4444; padding: 0.8rem; border-radius: 0.3rem; margin-bottom: 1rem;">
+          <strong>💡 為什麼要 drop_first=True？</strong><br>
+          若有 $k$ 個州（California, Florida, New York），若編碼為 3 個變數，其總和必為 1（$X_{NY} = 1 - X_{CA} - X_{FL}$），形成完全線性相依（Multicollinearity），會破壞線性回歸矩陣求逆的穩定性。因此必須拋棄 1 個虛擬變數作為基準類別。
+        </div>
+        <pre><code># 切分 X 與 y，並使用 drop_first=True 避開共線性
+X = pd.get_dummies(data.drop('Profit', axis=1), columns=['State'], drop_first=True, dtype=int)
+y = data['Profit']
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)</code></pre>
+      </div>
+
+      <!-- Phase 4 Content -->
+      <div class="tab-content" id="phase4">
+        <h3 style="color: #93c5fd; margin-bottom: 0.5rem;">Phase 4: Modeling (模型建立)</h3>
+        <p style="color: var(--text-muted); margin-bottom: 1rem;">
+          採用 scikit-learn 的 <code>LinearRegression</code> 擬合訓練集資料：
+        </p>
+        <div style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem;">
+          $$\text{Profit} = 42554.17 + 0.7735 \times \text{R\&D} + 0.0329 \times \text{Admin} + 0.0366 \times \text{Marketing} - 959.28 \times \text{FL} + 699.37 \times \text{NY}$$
+        </div>
+        <p style="color: var(--text-muted); font-size: 0.9rem;">
+          <strong>係數實務意涵</strong>：研發係數達 0.7735，表示每增加 10,000 美元研發費用，利潤平均提升 7,735 美元；相比之下，行政管理與行銷支出係數僅約 0.03，影響力極微。
+        </p>
+      </div>
+
+      <!-- Phase 5 Content -->
+      <div class="tab-content" id="phase5">
+        <h3 style="color: #93c5fd; margin-bottom: 0.5rem;">Phase 5: Evaluation & Forward Selection (評估與前向特徵選取)</h3>
+        <p style="color: var(--text-muted); margin-bottom: 1rem;">
+          透過貪婪演算法比較 1 到 5 個特徵子集之泛化表現：
+        </p>
+        <table class="styled-table">
+          <thead>
+            <tr>
+              <th>特徵數</th>
+              <th>選取特徵組合 (Selected Features)</th>
+              <th>RMSE</th>
+              <th>$R^2$</th>
+              <th>結論</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>1</td>
+              <td><code>R&D Spend</code></td>
+              <td>8274.87</td>
+              <td>0.946459</td>
+              <td>單一最強特徵</td>
+            </tr>
+            <tr style="background: rgba(16, 185, 129, 0.15);">
+              <td><strong>2</strong></td>
+              <td><strong><code>R&D Spend</code>, <code>Marketing Spend</code></strong></td>
+              <td class="highlight"><strong>8198.80</strong></td>
+              <td class="highlight"><strong>0.947439</strong></td>
+              <td><span style="color: var(--accent-emerald); font-weight: 700;">★ 全域最佳組合</span></td>
+            </tr>
+            <tr>
+              <td>3</td>
+              <td><code>R&D Spend</code>, <code>Marketing Spend</code>, <code>State_New York</code></td>
+              <td>8309.06</td>
+              <td>0.946015</td>
+              <td>誤差略增</td>
+            </tr>
+            <tr>
+              <td>4</td>
+              <td><code>R&D Spend</code>, <code>Marketing Spend</code>, <code>State_New York</code>, <code>State_Florida</code></td>
+              <td>8409.92</td>
+              <td>0.944697</td>
+              <td>誤差持續上升</td>
+            </tr>
+            <tr>
+              <td>5</td>
+              <td><code>R&D Spend</code>, <code>Marketing Spend</code>, <code>State_New York</code>, <code>State_Florida</code>, <code>Administration</code></td>
+              <td>9137.99</td>
+              <td>0.934707</td>
+              <td>加入行政變數表現最差</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Phase 6 Content -->
+      <div class="tab-content" id="phase6">
+        <h3 style="color: #93c5fd; margin-bottom: 0.5rem;">Phase 6: Deployment (模型部署與封裝)</h3>
+        <p style="color: var(--text-muted); margin-bottom: 1rem;">
+          為方便產線服務與微服務（Microservices）介接，將模型與特徵名稱清單透過 <code>gzip</code> 與 <code>pickle</code> 壓縮封裝：
+        </p>
+        <pre><code># 模型封裝
+import gzip, pickle
+with gzip.open("startup_lr_model.pkl.gz", "wb") as f:
+    pickle.dump({"model": regressor, "features": list(X.columns)}, f)
+
+# 產線推論
+with gzip.open("startup_lr_model.pkl.gz", "rb") as f:
+    pkg = pickle.load(f)
+    prediction = pkg["model"].predict(new_data)</code></pre>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+      <p>
+        專案倉庫：<a href="https://github.com/mumumush/1014" target="_blank">https://github.com/mumumush/1014</a> | 
+        學術參考：Kaggle 50 Startups, Scikit-Learn Documentation
+      </p>
+      <p style="margin-top: 0.5rem;">
+        Developed for AIoT-DA CRISP-DM Machine Learning Practice.
+      </p>
+    </footer>
+  </div>
+
+  <script>
+    // Initialize Lucide icons
+    lucide.createIcons();
+
+    // Regression Parameters from Python Model
+    const INTERCEPT = 42554.1676;
+    const COEFS = {
+      rnd: 0.77346719,
+      admin: 0.03288459,
+      mkt: 0.03661003,
+      state_fl: -959.284160,
+      state_ny: 699.369053,
+      state_ca: 0
+    };
+
+    function syncInput(field, val) {
+      document.getElementById(field + '-input').value = val;
+      document.getElementById(field + '-display').innerText = '$' + Number(val).toLocaleString();
+      calculateProfit();
+    }
+
+    function syncRange(field, val) {
+      document.getElementById(field + '-range').value = val;
+      document.getElementById(field + '-display').innerText = '$' + Number(val).toLocaleString();
+      calculateProfit();
+    }
+
+    function applyPreset(rnd, admin, mkt, state) {
+      document.getElementById('rnd-input').value = rnd;
+      document.getElementById('rnd-range').value = rnd;
+      document.getElementById('rnd-display').innerText = '$' + rnd.toLocaleString();
+
+      document.getElementById('admin-input').value = admin;
+      document.getElementById('admin-range').value = admin;
+      document.getElementById('admin-display').innerText = '$' + admin.toLocaleString();
+
+      document.getElementById('mkt-input').value = mkt;
+      document.getElementById('mkt-range').value = mkt;
+      document.getElementById('mkt-display').innerText = '$' + mkt.toLocaleString();
+
+      document.getElementById('state-select').value = state;
+      calculateProfit();
+    }
+
+    function calculateProfit() {
+      const rnd = parseFloat(document.getElementById('rnd-input').value) || 0;
+      const admin = parseFloat(document.getElementById('admin-input').value) || 0;
+      const mkt = parseFloat(document.getElementById('mkt-input').value) || 0;
+      const state = document.getElementById('state-select').value;
+
+      let stateAdj = 0;
+      if (state === 'Florida') stateAdj = COEFS.state_fl;
+      else if (state === 'New York') stateAdj = COEFS.state_ny;
+
+      const rndContrib = rnd * COEFS.rnd;
+      const adminContrib = admin * COEFS.admin;
+      const mktContrib = mkt * COEFS.mkt;
+
+      const totalProfit = INTERCEPT + rndContrib + adminContrib + mktContrib + stateAdj;
+
+      document.getElementById('result-amount').innerText = '$' + totalProfit.toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
+
+      document.getElementById('result-breakdown').innerHTML = 
+        `基準 $42,554 + 研發貢獻 ($${rndContrib.toFixed(0)}) + 行政 ($${adminContrib.toFixed(0)}) + 行銷 ($${mktContrib.toFixed(0)}) + 州別修正 ($${stateAdj.toFixed(0)})`;
+    }
+
+    function switchTab(evt, tabId) {
+      const tabContents = document.querySelectorAll('.tab-content');
+      tabContents.forEach(content => content.classList.remove('active'));
+
+      const tabBtns = document.querySelectorAll('.tab-btn');
+      tabBtns.forEach(btn => btn.classList.remove('active'));
+
+      document.getElementById(tabId).classList.add('active');
+      evt.currentTarget.classList.add('active');
+    }
+
+    // Chart.js Horizontal Bar Chart for Feature Weights
+    window.addEventListener('DOMContentLoaded', () => {
+      calculateProfit();
+
+      const ctx = document.getElementById('coefChart').getContext('2d');
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['R&D Spend', 'Marketing Spend', 'Administration', 'State: NY', 'State: FL'],
+          datasets: [{
+            label: '回歸係數 (Weight)',
+            data: [0.7735, 0.0366, 0.0329, 699.37 / 10000, -959.28 / 10000],
+            backgroundColor: [
+              'rgba(59, 130, 246, 0.85)',
+              'rgba(16, 185, 129, 0.85)',
+              'rgba(244, 114, 182, 0.85)',
+              'rgba(167, 139, 250, 0.85)',
+              'rgba(239, 68, 68, 0.85)'
+            ],
+            borderColor: [
+              '#3b82f6',
+              '#10b981',
+              '#f472b6',
+              '#a78bfa',
+              '#ef4444'
+            ],
+            borderWidth: 1,
+            borderRadius: 6
+          }]
+        },
+        options: {
+          indexAxis: 'y',
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  return '係數值: ' + context.parsed.x;
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              grid: { color: 'rgba(255, 255, 255, 0.06)' },
+              ticks: { color: '#9ca3af' }
+            },
+            y: {
+              grid: { display: false },
+              ticks: { color: '#f3f4f6' }
+            }
+          }
+        }
+      });
+    });
+  </script>
+</body>
+</html>
